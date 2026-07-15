@@ -5,3 +5,6 @@ This Maven/Java 26 project turns the repository's original Streams roadmap into 
 The repository did not originally contain a root `README.md`. Its source material remains preserved verbatim in:
 
 - [`questions.md`](src/main/java/streams/questions.md) â€” the primary question order
+- [`answers-anki-mode.md`](src/main/java/streams/answers-anki-mode.md) â€” the original answer notes
+
+No original question was removed or merged. The 180 numbered questions and 23 interview-theory questions each have a runnable class. Intentional duplicates remain separate. Eight clearly marked `ADDITIONAL` examples fill the remaining requested coverage gaps.
