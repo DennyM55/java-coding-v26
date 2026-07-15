@@ -8,3 +8,6 @@ The repository did not originally contain a root `README.md`. Its source materia
 - [`answers-anki-mode.md`](src/main/java/streams/answers-anki-mode.md) â€” the original answer notes
 
 No original question was removed or merged. The 180 numbered questions and 23 interview-theory questions each have a runnable class. Intentional duplicates remain separate. Eight clearly marked `ADDITIONAL` examples fill the remaining requested coverage gaps.
+
+Use the complete clickable [`PRACTICE_INDEX.md`](PRACTICE_INDEX.md) to navigate all 211 classes in recommended order.
+
