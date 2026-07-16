@@ -14,3 +14,6 @@ Use the complete clickable [`PRACTICE_INDEX.md`](PRACTICE_INDEX.md) to navigate 
 ## Run
 
 ```powershell
+mvn test
+mvn -q -DskipTests package
+```
