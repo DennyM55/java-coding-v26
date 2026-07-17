@@ -20,3 +20,6 @@ mvn -q -DskipTests package
 
 In IntelliJ IDEA, open any indexed class and run its `public static void main(String[] args)` method. Start with [`Q001_FilterAllOddNumbers.java`](src/main/java/com/dennym55/streams/topic01_stream_basics/Q001_FilterAllOddNumbers.java).
 
+## Design
+
+Each question has a dedicated sequence-prefixed class with the original wording and source reference in JavaDoc. Its complete solution expression is visible directly inside `main`. Only deterministic fixtures, domain records, and genuinely reusable helpers live in `com.dennym55.streams.support`.
