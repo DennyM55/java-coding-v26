@@ -98,6 +98,8 @@ def preamble(question_id: int) -> str:
     return 'System.out.println("Input: deterministic sample data");'
 
 rows = []
+advanced_material_present = (JAVA_ROOT / "topic25_advanced_functional_programming").exists()
+hand_improved_questions = {141, 179}
 for question_id, title, package_dir in entries:
     filename = f"Q{question_id:03d}_{class_stem(title)}.java"
     class_name = filename[:-5]
@@ -156,7 +158,9 @@ public class {class_name} {{
     }}
 }}
 '''
-    (directory / filename).write_text(source, encoding="utf-8", newline="\n")
+    target = directory / filename
+    if not (advanced_material_present and question_id in hand_improved_questions):
+        target.write_text(source, encoding="utf-8", newline="\n")
     rel = f"src/main/java/com/dennym55/streams/{package_dir}/{filename}"
     rows.append((question_id, title, filename, rel, source_kind))
 
@@ -173,7 +177,8 @@ for question_id, title, filename, rel, source_kind in rows:
     display_order = str(question_id) if question_id <= 180 else (f"T{question_id - 180:02d}" if question_id <= 203 else f"A{question_id - 203:02d}")
     escaped_title = title.replace("|", "\\|")
     index.append(f"| {display_order} | {escaped_title} | [{filename}]({rel.replace(' ', '%20')}) | `{Path(rel).parent.as_posix()}` | {source_kind} |")
-(ROOT / "PRACTICE_INDEX.md").write_text("\n".join(index) + "\n", encoding="utf-8", newline="\n")
+if not advanced_material_present:
+    (ROOT / "PRACTICE_INDEX.md").write_text("\n".join(index) + "\n", encoding="utf-8", newline="\n")
 
 readme = """# Java Streams Solved Practice Repository
 
@@ -201,5 +206,8 @@ In IntelliJ IDEA, open any indexed class and run its `public static void main(St
 
 Each question has a dedicated sequence-prefixed class with the original wording and source reference in JavaDoc. Its complete solution expression is visible directly inside `main`. Only deterministic fixtures, domain records, and genuinely reusable helpers live in `com.dennym55.streams.support`.
 """
-(ROOT / "README.md").write_text(readme, encoding="utf-8", newline="\n")
-print(f"Generated {len(entries)} launchers: {len(numbered) + len(theory)} original and {len(additional)} additional")
+if not advanced_material_present:
+    (ROOT / "README.md").write_text(readme, encoding="utf-8", newline="\n")
+print(f"Generated {len(entries)} legacy launchers: {len(numbered) + len(theory)} original and {len(additional)} additional")
+if advanced_material_present:
+    print("Preserved hand-improved Q141/Q179 plus the advanced README and PRACTICE_INDEX entries.")
