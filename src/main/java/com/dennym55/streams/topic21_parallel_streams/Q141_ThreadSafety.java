@@ -1,38 +1,38 @@
 package com.dennym55.streams.topic21_parallel_streams;
 
-import com.dennym55.streams.support.PracticeData;
-import com.dennym55.streams.support.PracticeRunner;
-import com.dennym55.streams.support.PracticeData.Employee;
-import com.dennym55.streams.support.PracticeData.Person;
-import com.dennym55.streams.support.PracticeData.Student;
-
-import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.*;
-import java.util.stream.*;
-
-import static com.dennym55.streams.support.PracticeData.*;
-import static com.dennym55.streams.support.PracticeRunner.*;
+import java.util.stream.IntStream;
 
 /**
  * Thread safety.
  *
- * <p>Input: A small deterministic sample is printed before the operation when applicable.
- * Expected output: The solved result (or concise theory answer) is printed as {@code Output: ...}.
+ * <p>Input: integers [0, 100,000) processed in parallel.
+ * Expected output: the unsafe counter may lose updates; AtomicInteger and reduction both return 100,000.
  *
- * <p>Source: questions.md - original question 141
+ * <p>Source: questions.md - original question 141. Improved with an actual race, an atomic fix,
+ * and the preferred stateless reduction.
  */
 public class Q141_ThreadSafety {
-    public static void main(String[] args) {
-        System.out.println("Question: Thread safety.");
-        System.out.println("Source: questions.md - original question 141");
-        System.out.println("Input: deterministic sample data");
 
-        // Complete solution for this question; shared helpers only provide fixtures or reusable setup.
-        Object result = switch (141) {
-            case 141 -> { AtomicInteger safe = new AtomicInteger(); IntStream.range(0, 1_000).parallel().forEach(i -> safe.incrementAndGet()); yield safe.get(); }
-            default -> throw new IllegalStateException("Unexpected question");
-        };
-        System.out.println("Output: " + result);
+    public record Counts(int unsafeSharedCounter, int atomicCounter, long reductionCount) {}
+
+    public static Counts count(int size) {
+        int[] unsafe = {0};
+        IntStream.range(0, size).parallel().forEach(ignored -> unsafe[0]++); // Data race.
+
+        AtomicInteger atomic = new AtomicInteger();
+        IntStream.range(0, size).parallel().forEach(ignored -> atomic.incrementAndGet());
+
+        // Preferred: no shared mutation; partitions reduce independently and combine safely.
+        long reduction = IntStream.range(0, size).parallel().count();
+        return new Counts(unsafe[0], atomic.get(), reduction);
+    }
+
+    public static void main(String[] args) {
+        int size = 100_000;
+        Counts output = count(size);
+        System.out.println("Input size: " + size);
+        System.out.println("Output: " + output);
+        System.out.println("Pitfall: an unsafe result can occasionally look correct; that does not remove the data race.");
     }
 }
