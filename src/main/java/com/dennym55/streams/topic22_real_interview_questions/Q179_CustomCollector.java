@@ -1,40 +1,82 @@
 package com.dennym55.streams.topic22_real_interview_questions;
 
-import com.dennym55.streams.support.PracticeData;
-import com.dennym55.streams.support.PracticeRunner;
-import com.dennym55.streams.support.PracticeData.Employee;
-import com.dennym55.streams.support.PracticeData.Person;
-import com.dennym55.streams.support.PracticeData.Student;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.*;
-import java.util.stream.*;
-
-import static com.dennym55.streams.support.PracticeData.*;
-import static com.dennym55.streams.support.PracticeRunner.*;
+import static com.dennym55.streams.support.PracticeData.words;
 
 /**
  * Custom collector.
  *
- * <p>Input: A small deterministic sample is printed before the operation when applicable.
- * Expected output: The solved result (or concise theory answer) is printed as {@code Output: ...}.
+ * <p>Input: [Apple, box, level, Apex, stream, box, x, radar].
+ * Expected output: count, total characters, longest word and average length.
  *
- * <p>Source: questions.md - original question 179
+ * <p>Source: questions.md - original question 179. Improved to demonstrate the supplier,
+ * accumulator, combiner, finisher, characteristics, and parallel equivalence.
  */
 public class Q179_CustomCollector {
-    public static void main(String[] args) {
-        System.out.println("Question: Custom collector.");
-        System.out.println("Source: questions.md - original question 179");
-        List<Integer> n = numbers();
-        List<String> w = words();
-        String text = "java streams make java concise streams";
 
-        // Complete solution for this question; shared helpers only provide fixtures or reusable setup.
-        Object result = switch (179) {
-            case 179 -> w.stream().collect(Collector.of(ArrayList::new, List::add, (left, right) -> { left.addAll(right); return left; }));
-            default -> throw new IllegalStateException("Unexpected question");
-        };
-        System.out.println("Output: " + result);
+    public record WordStatistics(long count, long totalCharacters, String longest, double averageLength) {}
+
+    private static final class Accumulator {
+        private long count;
+        private long totalCharacters;
+        private String longest = "";
+
+        private void add(String word) {
+            count++;
+            totalCharacters += word.length();
+            addLongestOnly(word);
+        }
+
+        private Accumulator merge(Accumulator other) {
+            count += other.count;
+            totalCharacters += other.totalCharacters;
+            addLongestOnly(other.longest);
+            return this;
+        }
+
+        private void addLongestOnly(String candidate) {
+            if (candidate.length() > longest.length()
+                    || (candidate.length() == longest.length() && candidate.compareTo(longest) < 0)) {
+                longest = candidate;
+            }
+        }
+
+        private WordStatistics finish() {
+            return new WordStatistics(count, totalCharacters, longest,
+                    count == 0 ? 0.0 : (double) totalCharacters / count);
+        }
+    }
+
+    public static Collector<String, ?, WordStatistics> wordStatisticsCollector() {
+        Supplier<Accumulator> supplier = Accumulator::new;
+        BiConsumer<Accumulator, String> accumulator = Accumulator::add;
+        BinaryOperator<Accumulator> combiner = Accumulator::merge;
+        Function<Accumulator, WordStatistics> finisher = Accumulator::finish;
+
+        // The result is encounter-order independent. IDENTITY_FINISH is absent because A != R.
+        return Collector.of(supplier, accumulator, combiner, finisher,
+                Collector.Characteristics.UNORDERED);
+    }
+
+    public static WordStatistics summarize(List<String> input) {
+        return input.stream().collect(wordStatisticsCollector());
+    }
+
+    public static void main(String[] args) {
+        List<String> input = words();
+        WordStatistics sequential = summarize(input);
+        WordStatistics parallel = input.parallelStream().collect(wordStatisticsCollector());
+
+        System.out.println("Input: " + input);
+        System.out.println("Sequential output: " + sequential);
+        System.out.println("Parallel output: " + parallel);
+        System.out.println("Characteristics: " + wordStatisticsCollector().characteristics());
+        System.out.println("Pitfall: the combiner must merge partial states correctly; parallel streams may invoke it many times.");
     }
 }
